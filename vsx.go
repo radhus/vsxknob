@@ -2,7 +2,29 @@ package main
 
 import (
 	"log"
+	"strconv"
 )
+
+func handleVolume(message string) {
+	volume, err := strconv.Atoi(message[3:])
+	if err != nil {
+		log.Println("Atoi failed for message:", message, "err:", err)
+		return
+	}
+
+	log.Println("Got volume:", volume)
+}
+
+func handlePower(message string) {
+	switch message[3] {
+	case '0':
+		log.Println("Power is on")
+	case '2':
+		log.Println("Power is standby")
+	default:
+		log.Println("Unexpected power:", message)
+	}
+}
 
 func handler(output <-chan string) {
 	log.Println("Handler running...")
@@ -19,9 +41,9 @@ func handler(output <-chan string) {
 
 		switch message[:3] {
 		case "VOL":
-			log.Println("Got volume:", message)
+			handleVolume(message)
 		case "PWR":
-			log.Println("Got power:", message)
+			handlePower(message)
 		default:
 			log.Println("Got unexpected:", message)
 		}
