@@ -12,6 +12,8 @@ func main() {
 	}
 	addr := os.Args[1]
 
+	go webserver(addr)
+
 	input := make(chan string)
 	go connection(addr, input)
 

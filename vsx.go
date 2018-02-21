@@ -11,16 +11,15 @@ func handleVolume(message string) {
 		log.Println("Atoi failed for message:", message, "err:", err)
 		return
 	}
-
-	log.Println("Got volume:", volume)
+	reportVolume(volume)
 }
 
 func handlePower(message string) {
 	switch message[3] {
 	case '0':
-		log.Println("Power is on")
+		reportPower(true)
 	case '2':
-		log.Println("Power is standby")
+		reportPower(false)
 	default:
 		log.Println("Unexpected power:", message)
 	}
