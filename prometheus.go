@@ -34,7 +34,7 @@ func reportVolume(volume int) {
 func reportPower(on bool) {
 	var value float64 = 1
 	if !on {
-		value = 1
+		value = 0
 		reportVolume(0)
 	}
 	powerGauge.With(prometheus.Labels{"addr": addrLabel}).Set(value)
