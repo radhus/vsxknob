@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: vsxknob
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vsxknob
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: vsxknob
+          image: radhus/vsxknob:latest
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+          command:
+            - "/vsxknob"
+            - "10.2.20.158:8102"
