@@ -1,15 +1,18 @@
 # vsxknob
 
-Expose Prometheus compatible metrics from some Pioneer VSX receivers.
+Publish information from Pioneer VSX receivers on Prometheus and MQTT.
 
 ## Usage
 
 ```
 $ go get -u github.com/radhus/vsxknob
-$ vsxknob receiver:8102
+$ vsxknob receiver:8102 mqtt-host:1883
 ```
 
-... and check http://localhost:8080/metrics
+For Prometheus metrics, check http://localhost:8080/metrics
 
+For MQTT, subscribe to topics `vsx/power` and `vsx/volume`.
 
-Also published manually to Docker hub as `radhus/vsxknob:latest`.
+## Docker
+
+Published manually to Docker hub as `radhus/vsxknob:latest`.
