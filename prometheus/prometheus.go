@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Server struct {
@@ -49,7 +50,7 @@ func (s *Server) ReportPower(on bool) {
 }
 
 func (s *Server) Start(listenAddr string) {
-	http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/metrics", promhttp.Handler())
 	err := http.ListenAndServe(listenAddr, nil)
 	log.Fatalln("ListenAndServe failed:", err)
 }
