@@ -1,15 +1,10 @@
-FROM golang:1.10 as builder
-
-RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+FROM golang:1.13 as builder
 
 WORKDIR /go/src/github.com/radhus/vsxknob
 COPY . ./
-RUN dep ensure
-RUN CGO_ENABLED=0 go install \
-      -a -tags netgo \
-      -ldflags '-extldflags "-static"'
 
+RUN CGO_ENABLED=0 go install
 
-FROM scratch
+FROM gcr.io/distroless/base
 COPY --from=builder /go/bin/vsxknob /vsxknob
 ENTRYPOINT ["/vsxknob"]
