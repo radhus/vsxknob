@@ -4,6 +4,9 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/radhus/vsxknob/prometheus"
+	"github.com/radhus/vsxknob/vsx"
 )
 
 func main() {
@@ -12,15 +15,18 @@ func main() {
 	}
 	addr := os.Args[1]
 
-	go webserver(addr)
+	prom := prometheus.New(addr)
+	go prom.Start(":8080")
 
-	input := make(chan string)
-	go connection(addr, input)
+	connection, err := vsx.Connect(addr, prom)
+	if err != nil {
+		log.Fatalln("Couldn't connect to VSX:", err)
+	}
 
 	for {
-		volume(input)
+		connection.CheckVolume()
 		time.Sleep(250 * time.Millisecond)
-		power(input)
+		connection.CheckPower()
 		time.Sleep(1 * time.Second)
 	}
 }

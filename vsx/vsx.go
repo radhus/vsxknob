@@ -1,31 +1,31 @@
-package main
+package vsx
 
 import (
 	"log"
 	"strconv"
 )
 
-func handleVolume(message string) {
+func (c *Connection) handleVolume(message string) {
 	volume, err := strconv.Atoi(message[3:])
 	if err != nil {
 		log.Println("Atoi failed for message:", message, "err:", err)
 		return
 	}
-	reportVolume(volume)
+	c.reporter.ReportVolume(volume)
 }
 
-func handlePower(message string) {
+func (c *Connection) handlePower(message string) {
 	switch message[3] {
 	case '0':
-		reportPower(true)
+		c.reporter.ReportPower(true)
 	case '2':
-		reportPower(false)
+		c.reporter.ReportPower(false)
 	default:
 		log.Println("Unexpected power:", message)
 	}
 }
 
-func handler(output <-chan string) {
+func (c *Connection) handler(output <-chan string) {
 	log.Println("Handler running...")
 	for {
 		line := <-output
@@ -36,23 +36,24 @@ func handler(output <-chan string) {
 
 		if len(message) < 3 {
 			log.Println("Skipping too short:", message)
+			return
 		}
 
 		switch message[:3] {
 		case "VOL":
-			handleVolume(message)
+			c.handleVolume(message)
 		case "PWR":
-			handlePower(message)
+			c.handlePower(message)
 		default:
 			log.Println("Got unexpected:", message)
 		}
 	}
 }
 
-func volume(input chan<- string) {
-	input <- "?V"
+func (c *Connection) CheckVolume() {
+	c.input <- "?V"
 }
 
-func power(input chan<- string) {
-	input <- "?P"
+func (c *Connection) CheckPower() {
+	c.input <- "?P"
 }
