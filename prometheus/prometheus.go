@@ -14,6 +14,8 @@ type Server struct {
 	labels      prometheus.Labels
 }
 
+var labels = []string{"addr"}
+
 func New(addressLabel string) *Server {
 	server := &Server{
 		volumeGauge: prometheus.NewGaugeVec(
@@ -21,16 +23,16 @@ func New(addressLabel string) *Server {
 				Name: "volume",
 				Help: "current volume level",
 			},
-			[]string{"addr"},
+			labels,
 		),
 		powerGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "up",
-				Help: "power level",
+				Help: "power",
 			},
-			[]string{"addr"},
+			labels,
 		),
-		labels: prometheus.Labels{"addr": addressLabel},
+		labels: prometheus.Labels{labels[0]: addressLabel},
 	}
 
 	prometheus.MustRegister(server.volumeGauge, server.powerGauge)
