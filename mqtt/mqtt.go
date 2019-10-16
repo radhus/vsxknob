@@ -13,9 +13,13 @@ import (
 type state struct {
 	Power  bool    `json:"power"`
 	Volume float64 `json:"volume"`
+	Muted  bool    `json:"muted"`
+	Source string  `json:"source"`
 
 	volumeSet bool
 	powerSet  bool
+	mutedSet  bool
+	sourceSet bool
 }
 
 type connection struct {
@@ -47,7 +51,7 @@ func (c *connection) publishState(newState state) {
 	}
 	c.lastState = newState
 
-	ready := newState.powerSet && newState.volumeSet
+	ready := newState.powerSet && newState.volumeSet && newState.mutedSet && newState.sourceSet
 	if !ready {
 		return
 	}
@@ -72,5 +76,19 @@ func (c *connection) ReportPower(on bool) {
 	newState := c.lastState
 	newState.Power = on
 	newState.powerSet = true
+	c.publishState(newState)
+}
+
+func (c *connection) ReportMuted(muted bool) {
+	newState := c.lastState
+	newState.Muted = muted
+	newState.mutedSet = true
+	c.publishState(newState)
+}
+
+func (c *connection) ReportSource(source string) {
+	newState := c.lastState
+	newState.Source = source
+	newState.sourceSet = true
 	c.publishState(newState)
 }

@@ -11,6 +11,7 @@ import (
 type Server struct {
 	volumeGauge *prometheus.GaugeVec
 	powerGauge  *prometheus.GaugeVec
+	mutedGauge  *prometheus.GaugeVec
 	labels      prometheus.Labels
 }
 
@@ -32,6 +33,13 @@ func New(addressLabel string) *Server {
 			},
 			labels,
 		),
+		mutedGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "muted",
+				Help: "muted",
+			},
+			labels,
+		),
 		labels: prometheus.Labels{labels[0]: addressLabel},
 	}
 
@@ -49,6 +57,18 @@ func (s *Server) ReportPower(on bool) {
 		value = 0
 	}
 	s.powerGauge.With(s.labels).Set(value)
+}
+
+func (s *Server) ReportMuted(muted bool) {
+	var value float64 = 1
+	if !muted {
+		value = 0
+	}
+	s.mutedGauge.With(s.labels).Set(value)
+}
+
+func (s *Server) ReportSource(source string) {
+	// noop
 }
 
 func (s *Server) Start(listenAddr string) {

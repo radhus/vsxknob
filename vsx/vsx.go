@@ -25,6 +25,21 @@ func (c *Connection) handlePower(message string) {
 	}
 }
 
+func (c *Connection) handleMuted(message string) {
+	muted := message[0:3] == "MUT0"
+	c.reporter.ReportMuted(muted)
+}
+
+func (c *Connection) handleSource(message string) {
+	sourceID := message[2:]
+	source, found := sources[sourceID]
+	if !found {
+		log.Println("Unsupported source:", source)
+		return
+	}
+	c.reporter.ReportSource(source)
+}
+
 func (c *Connection) handler(output <-chan string) {
 	log.Println("Handler running...")
 	for {
@@ -34,16 +49,20 @@ func (c *Connection) handler(output <-chan string) {
 		}
 		message := line[:len(line)-2]
 
-		if len(message) < 3 {
+		if len(message) < 2 {
 			log.Println("Skipping too short:", message)
 			return
 		}
 
-		switch message[:3] {
-		case "VOL":
+		switch message[:2] {
+		case "VO":
 			c.handleVolume(message)
-		case "PWR":
+		case "PW":
 			c.handlePower(message)
+		case "MU":
+			c.handleMuted(message)
+		case "FN":
+			c.handleSource(message)
 		default:
 			log.Println("Got unexpected:", message)
 		}
@@ -58,7 +77,17 @@ func (c *Connection) CheckPower() {
 	c.input <- "?P"
 }
 
+func (c *Connection) CheckMuted() {
+	c.input <- "?M"
+}
+
+func (c *Connection) CheckSource() {
+	c.input <- "?F"
+}
+
 func (c *Connection) Poll() {
 	c.CheckPower()
 	c.CheckVolume()
+	c.CheckMuted()
+	c.CheckSource()
 }
