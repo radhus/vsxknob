@@ -11,7 +11,7 @@ $ vsxknob receiver:8102 mqtt-host:1883
 
 For Prometheus metrics, check http://localhost:8080/metrics
 
-For MQTT, subscribe to topics `vsx/power` and `vsx/volume`.
+For MQTT, subscribe to topic `vsx/state`.
 
 ## Docker
 

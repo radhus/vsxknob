@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -9,8 +10,18 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+type state struct {
+	Power  bool    `json:"power"`
+	Volume float64 `json:"volume"`
+
+	volumeSet bool
+	powerSet  bool
+}
+
 type connection struct {
 	client mqtt.Client
+
+	lastState state
 }
 
 func New(url string) (*connection, error) {
@@ -30,12 +41,36 @@ func New(url string) (*connection, error) {
 	}, nil
 }
 
-func (c *connection) ReportVolume(volume int) {
-	token := c.client.Publish("vsx/volume", 0, true, fmt.Sprintf("%d", volume))
+func (c *connection) publishState(newState state) {
+	if newState == c.lastState {
+		return
+	}
+	c.lastState = newState
+
+	ready := newState.powerSet && newState.volumeSet
+	if !ready {
+		return
+	}
+
+	payload, err := json.Marshal(newState)
+	if err != nil {
+		log.Println("Couldn't marshal JSON:", err)
+	}
+
+	token := c.client.Publish("vsx/state", 0, true, payload)
 	token.Wait()
 }
 
+func (c *connection) ReportVolume(rawVolume int) {
+	newState := c.lastState
+	newState.Volume = float64(rawVolume) / 185
+	newState.volumeSet = true
+	c.publishState(newState)
+}
+
 func (c *connection) ReportPower(on bool) {
-	token := c.client.Publish("vsx/power", 0, true, fmt.Sprintf("%v", on))
-	token.Wait()
+	newState := c.lastState
+	newState.Power = on
+	newState.powerSet = true
+	c.publishState(newState)
 }
