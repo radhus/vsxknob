@@ -57,3 +57,8 @@ func (c *Connection) CheckVolume() {
 func (c *Connection) CheckPower() {
 	c.input <- "?P"
 }
+
+func (c *Connection) Poll() {
+	c.CheckPower()
+	c.CheckVolume()
+}

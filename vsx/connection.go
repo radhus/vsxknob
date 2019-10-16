@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/radhus/vsxknob/handler"
 )
@@ -49,6 +50,8 @@ func Connect(addr string, reporter handler.Reporter) (*Connection, error) {
 	go connection.reader(output)
 	go connection.sender()
 
+	connection.Poll()
+
 	return connection, nil
 }
 
@@ -59,5 +62,6 @@ func (c *Connection) sender() {
 		if err != nil {
 			log.Fatalln("Write failed:", err)
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }

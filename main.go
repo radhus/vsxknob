@@ -33,9 +33,7 @@ func main() {
 	}
 
 	for {
-		connection.CheckVolume()
-		time.Sleep(250 * time.Millisecond)
-		connection.CheckPower()
-		time.Sleep(1 * time.Second)
+		time.Sleep(30 * time.Second)
+		connection.Poll()
 	}
 }
