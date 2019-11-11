@@ -37,14 +37,14 @@ type request struct {
 	Source *string  `json:"source,omitempty"`
 }
 
-type connection struct {
+type Connection struct {
 	client mqtt.Client
 	setter handler.Setter
 
 	lastState state
 }
 
-func New(url string) (*connection, error) {
+func New(url string) (*Connection, error) {
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
 
 	opts := mqtt.NewClientOptions().AddBroker(url).SetClientID("vsxknob")
@@ -53,26 +53,26 @@ func New(url string) (*connection, error) {
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		return nil, fmt.Errorf("Failed to connect to MQTT: %w", token.Error())
+		return nil, fmt.Errorf("failed to connect to MQTT: %w", token.Error())
 	}
 
-	connection := &connection{
+	connection := &Connection{
 		client: client,
 	}
 
 	if token := client.Subscribe(topicSet, 0, connection.subscribe); token.Wait() && token.Error() != nil {
 		client.Disconnect(0)
-		return nil, fmt.Errorf("Failed to subscribe to MQTT: %w", token.Error())
+		return nil, fmt.Errorf("failed to subscribe to MQTT: %w", token.Error())
 	}
 
 	return connection, nil
 }
 
-func (c *connection) Setter(setter handler.Setter) {
+func (c *Connection) Setter(setter handler.Setter) {
 	c.setter = setter
 }
 
-func (c *connection) subscribe(_ mqtt.Client, message mqtt.Message) {
+func (c *Connection) subscribe(_ mqtt.Client, message mqtt.Message) {
 	if c.setter == nil {
 		log.Println("Cannot handle MQTT message without a Setter")
 		return
@@ -101,7 +101,7 @@ func (c *connection) subscribe(_ mqtt.Client, message mqtt.Message) {
 	}
 }
 
-func (c *connection) publishState(newState state) {
+func (c *Connection) publishState(newState state) {
 	if newState == c.lastState {
 		return
 	}
@@ -121,28 +121,28 @@ func (c *connection) publishState(newState state) {
 	token.Wait()
 }
 
-func (c *connection) ReportVolume(rawVolume int) {
+func (c *Connection) ReportVolume(rawVolume int) {
 	newState := c.lastState
 	newState.Volume = float64(rawVolume) / maxVolume
 	newState.volumeSet = true
 	c.publishState(newState)
 }
 
-func (c *connection) ReportPower(on bool) {
+func (c *Connection) ReportPower(on bool) {
 	newState := c.lastState
 	newState.Power = on
 	newState.powerSet = true
 	c.publishState(newState)
 }
 
-func (c *connection) ReportMuted(muted bool) {
+func (c *Connection) ReportMuted(muted bool) {
 	newState := c.lastState
 	newState.Muted = muted
 	newState.mutedSet = true
 	c.publishState(newState)
 }
 
-func (c *connection) ReportSource(source string) {
+func (c *Connection) ReportSource(source string) {
 	newState := c.lastState
 	newState.Source = source
 	newState.sourceSet = true
