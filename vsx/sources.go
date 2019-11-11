@@ -23,3 +23,11 @@ var sources = map[string]string{
 	"27": "SIRIUS",
 	"33": "ADAPTER PORT",
 }
+
+var sourceIDs = map[string]string{}
+
+func init() {
+	for id, value := range sources {
+		sourceIDs[value] = id
+	}
+}

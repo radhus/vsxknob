@@ -9,6 +9,13 @@ type Reporter interface {
 	ReportSource(source string)
 }
 
+type Setter interface {
+	SetPower(on bool)
+	SetVolume(volume int)
+	SetMute(muted bool)
+	SetSource(source string)
+}
+
 type multiplexer []Reporter
 
 func Multiplex(reporters ...Reporter) Reporter {

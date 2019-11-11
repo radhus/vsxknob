@@ -1,6 +1,7 @@
 package vsx
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 )
@@ -92,5 +93,42 @@ func (c *Connection) Poll() {
 	c.CheckPower()
 	c.CheckVolume()
 	c.CheckMuted()
+	c.CheckSource()
+}
+
+func (c *Connection) SetPower(on bool) {
+	cmd := "PO"
+	if !on {
+		cmd = "PF"
+	}
+
+	c.input <- cmd
+	c.CheckPower()
+}
+
+func (c *Connection) SetVolume(volume int) {
+	// TODO
+	c.CheckVolume()
+}
+
+func (c *Connection) SetMute(muted bool) {
+	cmd := "MO"
+	if !muted {
+		cmd = "MF"
+	}
+
+	c.input <- cmd
+	c.CheckMuted()
+}
+
+func (c *Connection) SetSource(source string) {
+	sourceID, found := sourceIDs[source]
+	if !found {
+		log.Println("Couldn't set to unknown source:", source)
+		return
+	}
+
+	cmd := fmt.Sprintf("%sFN", sourceID)
+	c.input <- cmd
 	c.CheckSource()
 }
