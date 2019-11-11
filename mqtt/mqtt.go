@@ -8,10 +8,12 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/radhus/vsxknob/handler"
 )
 
 const (
 	topicState = "vsx/state"
+	topicSet   = "vsx/set"
 
 	maxVolume = 185
 )
@@ -28,8 +30,16 @@ type state struct {
 	sourceSet bool
 }
 
+type request struct {
+	Power  *bool    `json:"power,omitempty"`
+	Volume *float64 `json:"volume,omitempty"`
+	Muted  *bool    `json:"muted,omitempty"`
+	Source *string  `json:"source,omitempty"`
+}
+
 type connection struct {
 	client mqtt.Client
+	setter handler.Setter
 
 	lastState state
 }
@@ -46,9 +56,49 @@ func New(url string) (*connection, error) {
 		return nil, fmt.Errorf("Failed to connect to MQTT: %w", token.Error())
 	}
 
-	return &connection{
+	connection := &connection{
 		client: client,
-	}, nil
+	}
+
+	if token := client.Subscribe(topicSet, 0, connection.subscribe); token.Wait() && token.Error() != nil {
+		client.Disconnect(0)
+		return nil, fmt.Errorf("Failed to subscribe to MQTT: %w", token.Error())
+	}
+
+	return connection, nil
+}
+
+func (c *connection) Setter(setter handler.Setter) {
+	c.setter = setter
+}
+
+func (c *connection) subscribe(_ mqtt.Client, message mqtt.Message) {
+	if c.setter == nil {
+		log.Println("Cannot handle MQTT message without a Setter")
+		return
+	}
+
+	req := request{}
+	if err := json.Unmarshal(message.Payload(), &req); err != nil {
+		log.Println("Couldn't unmarshal request:", err)
+	}
+
+	if req.Power != nil {
+		c.setter.SetPower(*req.Power)
+	}
+
+	if req.Volume != nil {
+		volume := int(*req.Volume * maxVolume)
+		c.setter.SetVolume(volume)
+	}
+
+	if req.Muted != nil {
+		c.setter.SetMute(*req.Muted)
+	}
+
+	if req.Source != nil {
+		c.setter.SetSource(*req.Source)
+	}
 }
 
 func (c *connection) publishState(newState state) {

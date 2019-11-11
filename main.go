@@ -32,6 +32,8 @@ func main() {
 		log.Fatalln("Couldn't connect to VSX:", err)
 	}
 
+	mqtt.Setter(connection)
+
 	for {
 		time.Sleep(30 * time.Second)
 		connection.Poll()
