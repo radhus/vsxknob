@@ -26,7 +26,7 @@ func (c *Connection) handlePower(message string) {
 }
 
 func (c *Connection) handleMuted(message string) {
-	muted := message[0:3] == "MUT0"
+	muted := message[3] == '0'
 	c.reporter.ReportMuted(muted)
 }
 
@@ -51,21 +51,24 @@ func (c *Connection) handler(output <-chan string) {
 
 		if len(message) < 2 {
 			log.Println("Skipping too short:", message)
-			return
+			continue
 		}
+		go c.handleMessage(message)
+	}
+}
 
-		switch message[:2] {
-		case "VO":
-			c.handleVolume(message)
-		case "PW":
-			c.handlePower(message)
-		case "MU":
-			c.handleMuted(message)
-		case "FN":
-			c.handleSource(message)
-		default:
-			log.Println("Got unexpected:", message)
-		}
+func (c *Connection) handleMessage(message string) {
+	switch message[:2] {
+	case "VO":
+		c.handleVolume(message)
+	case "PW":
+		c.handlePower(message)
+	case "MU":
+		c.handleMuted(message)
+	case "FN":
+		c.handleSource(message)
+	default:
+		log.Println("Got unexpected:", message)
 	}
 }
 
