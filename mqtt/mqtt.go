@@ -10,6 +10,12 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+const (
+	topicState = "vsx/state"
+
+	maxVolume = 185
+)
+
 type state struct {
 	Power  bool    `json:"power"`
 	Volume float64 `json:"volume"`
@@ -61,13 +67,13 @@ func (c *connection) publishState(newState state) {
 		log.Println("Couldn't marshal JSON:", err)
 	}
 
-	token := c.client.Publish("vsx/state", 0, true, payload)
+	token := c.client.Publish(topicState, 0, true, payload)
 	token.Wait()
 }
 
 func (c *connection) ReportVolume(rawVolume int) {
 	newState := c.lastState
-	newState.Volume = float64(rawVolume) / 185
+	newState.Volume = float64(rawVolume) / maxVolume
 	newState.volumeSet = true
 	c.publishState(newState)
 }
