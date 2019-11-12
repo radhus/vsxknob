@@ -1,0 +1,30 @@
+name: docker
+
+on:
+  push:
+    branches: master
+    tags:
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup Docker buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          version: latest
+      - name: Run buildx
+        run: |
+          docker login docker.pkg.github.com \
+            --username radhus \
+            --password "${GITHUB_PACKAGE_REGISTRY_TOKEN}"
+          docker buildx build \
+            --tag docker.pkg.github.com/radhus/vsxknob/vsxknob:latest \
+            --platform linux/amd64,linux/arm/v7,linux/arm64 \
+            --output "type=image,push=false" \
+            --file ./Dockerfile .
+        env:
+          GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.github_token }}
