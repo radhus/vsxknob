@@ -27,4 +27,4 @@ jobs:
             --output "type=image,push=true" \
             --file ./Dockerfile .
         env:
-          GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.github_token }}
+          GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.GITHUB_PACKAGE_REGISTRY_TOKEN }}
