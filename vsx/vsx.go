@@ -12,6 +12,7 @@ func (c *Connection) handleVolume(message string) {
 		log.Println("Atoi failed for message:", message, "err:", err)
 		return
 	}
+	volume = (volume - 1) / 2
 	c.reporter.ReportVolume(volume)
 }
 

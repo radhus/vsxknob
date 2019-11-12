@@ -15,7 +15,7 @@ const (
 	topicState = "vsx/state"
 	topicSet   = "vsx/set"
 
-	maxVolume = 185
+	maxVolume = 40
 )
 
 type state struct {
