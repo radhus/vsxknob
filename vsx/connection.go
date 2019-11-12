@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/radhus/vsxknob/handler"
@@ -14,6 +15,13 @@ type Connection struct {
 	reporter handler.Reporter
 
 	input chan string
+
+	volume struct {
+		mutex  sync.Mutex
+		last   int
+		wanted int
+		active bool
+	}
 }
 
 func (c *Connection) reader(output chan<- string) {
@@ -62,6 +70,6 @@ func (c *Connection) sender() {
 		if err != nil {
 			log.Fatalln("Write failed:", err)
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(25 * time.Millisecond)
 	}
 }
