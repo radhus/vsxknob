@@ -24,7 +24,7 @@ jobs:
           docker buildx build \
             --tag docker.pkg.github.com/radhus/vsxknob/vsxknob:latest \
             --platform linux/amd64,linux/arm/v7,linux/arm64 \
-            --output "type=image,push=false" \
+            --output "type=image,push=true" \
             --file ./Dockerfile .
         env:
           GITHUB_PACKAGE_REGISTRY_TOKEN: ${{ secrets.github_token }}
