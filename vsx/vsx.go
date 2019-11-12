@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 )
 
 func (c *Connection) handleVolume(message string) {
@@ -13,6 +14,8 @@ func (c *Connection) handleVolume(message string) {
 		return
 	}
 	volume = (volume - 1) / 2
+
+	c.volume.last = volume
 	c.reporter.ReportVolume(volume)
 }
 
@@ -74,8 +77,15 @@ func (c *Connection) handleMessage(message string) {
 	}
 }
 
-func (c *Connection) CheckVolume() {
+func (c *Connection) checkVolume() {
 	c.input <- "?V"
+}
+
+func (c *Connection) CheckVolume() {
+	if c.volume.active {
+		return
+	}
+	c.checkVolume()
 }
 
 func (c *Connection) CheckPower() {
@@ -108,8 +118,50 @@ func (c *Connection) SetPower(on bool) {
 }
 
 func (c *Connection) SetVolume(volume int) {
-	// TODO
-	c.CheckVolume()
+	c.volume.wanted = volume
+
+	c.volume.mutex.Lock()
+	defer c.volume.mutex.Unlock()
+
+	c.volume.active = true
+	defer func() {
+		c.volume.active = false
+	}()
+
+	if c.volume.wanted != volume {
+		return
+	}
+
+	start := time.Now()
+	last := -1
+	for c.volume.wanted != c.volume.last {
+		if start.Add(3 * time.Second).Before(time.Now()) {
+			log.Println("Failing to reconciliate volume after 2 seconds, aborting")
+			return
+		}
+
+		if c.volume.last != last {
+			last = c.volume.last
+			diff := c.volume.wanted - c.volume.last
+
+			cmd := "VU"
+			steps := diff
+			if steps < 0 {
+				cmd = "VD"
+				steps = -steps
+			}
+			if steps > 5 {
+				steps = 5
+			}
+
+			for i := 0; i < steps; i++ {
+				c.input <- cmd
+			}
+		} else {
+			time.Sleep(25 * time.Millisecond)
+		}
+		c.checkVolume()
+	}
 }
 
 func (c *Connection) SetMute(muted bool) {
